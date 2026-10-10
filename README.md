@@ -5,9 +5,6 @@
     source .venv/bin/activate
     pip install -r requirements.txt
 
-## Chạy
-    python main.py            # GUI một agent (UCS / A*)
-    python main_versus.py     # GUI hai agent đối kháng
 
 ## Cấu trúc
 - core/        logic bài toán, UCS, A*, heuristic
