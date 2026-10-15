@@ -98,8 +98,8 @@ Sau khi mô hình 1 agent đã chốt, ghi ở đây những thay đổi khi chu
 **Nhóm trả lời:**
 - Trạng thái có thêm vị trí của agent thứ hai. 2 agent sẽ action cùng lúc với nhau, nên 1 action bây giờ là 2 agent sẽ thực hiện cùng lúc
 - Cả 2 agent đều không đứng cùng 1 ô, vì sẽ bị đè
-- Cho phép agent đẩy box đã được agent kia đặt đúng target, để trường hợp nếu cần tìm đường thì có thể di chuyển chúng được, sau khi làm vậy thì phải để lại box vào target ban đầu. Điều này ảnh hưởng đến goal test và điều kiện thắng.
-- Điều kiện thắng: sau n bước, ai đưa được nhiều box vào target đúng hơn thì thắng
-- Nếu mỗi agent chỉ được đụng box của mình, hai agent đi độc lập và không ảnh hưởng nhau. Khi được đẩy box của đối phương, mỗi quyết định của agent này có thể làm agent kia mất lợi thế, nên đây mới là bài cạnh tranh.
+- Cho phép agent đẩy box đã được agent kia đặt đúng target, để trường hợp nếu cần tìm đường thì có thể di chuyển chúng được, sau khi làm vậy đẩy ra rồi đặt lại (có thể vào target của agent nào đó, kể cả đẩy về target phe mình), chứ không bắt buộc phải trả về đúng chỗ cũ. Điều này ảnh hưởng đến goal test và điều kiện thắng.
+- Điều kiện thắng: sau n bước, ai đưa được nhiều box vào target của phe mình đúng hơn thì thắng
+- Hai agent đi độc lập và không ảnh hưởng nhau. Khi cùng đích ô trống hoặc cùng đẩy 1 box → roll p, 1 agent thực hiện, agent kia đứng yên. Cả 2 không được đi xuyên qua nhau
 - Tránh bế tắc. Box đã nằm đúng target có thể chắn lối đi duy nhất. Nếu không được đẩy ra, agent kia có thể không bao giờ tới được box của mình.
-- Hệ quả cho formulation: goal test và điều kiện thắng phải tính theo từng agent. Mỗi agent có tập target riêng, và số box đúng target của mỗi bên được tính sau n bước. Box có thể đổi bên trong quá trình chơi, nên không thể chỉ kiểm tra "tất cả box đã đúng chỗ
+- Hệ quả cho formulation: goal test và điều kiện thắng phải tính theo từng agent. Mỗi agent có tập target riêng, và số box đúng target của mỗi bên được tính sau n bước. Box có thể đổi bên trong quá trình chơi, nên không thể chỉ kiểm tra "tất cả box đã đúng chỗ"

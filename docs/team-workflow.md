@@ -62,15 +62,15 @@ Ký hiệu: **A** = trưởng nhóm (GUI, formulation, state), **B** = thuật t
 |---|---|---|---|---|
 | T3 | A | `state.py`: biểu diễn state, đọc map, kiểm tra đích | `sokoban/state.py` | ✅ Xong, đã test kỹ bằng REPL. |
 | T4 | A | Vẽ map bằng asset thật, Space tạm dừng/chạy, → / ← bước tới/lùi, bộ đếm action, icon play/pause kiểu Youtube, tổ chức OOP (`class SokobanGame`) | `sokoban/game.py` | ✅ Xong (13/10). |
-| — | A | Thêm lựa chọn UCS hoặc A* trên UI (đề bắt buộc: "two options of algorithms") | `sokoban/game.py` | 🔲 Chưa làm — việc kế tiếp sau T11. |
+| — | A | Thêm lựa chọn UCS hoặc A* trên UI (đề bắt buộc: "two options of algorithms") — chọn bằng click chuột vào chữ "Algo", chỉ đổi được lúc chưa bắt đầu chạy | `sokoban/game.py` | ✅ Xong (15/10). |
 | T9 | A | Thay `self.path = ['E', 'W']` (dữ liệu test tạm) bằng gọi `solve()` thật từ `search.py` | `sokoban/game.py` | 🔲 Chờ B xong T5/T6 mới làm được. |
-| T15 | A | Chạy thử toàn bộ trên macOS 13.7.8 Intel, ghi lại kết quả (bản Python, bản pygame, lỗi nếu có) | `README.md` | 🔲 Chưa làm — cần mượn máy Mac trước D11 (16/10). |
+| T15 | A | ~~Chạy thử toàn bộ trên macOS~~ | `README.md` | ❌ Đã bỏ — thầy xác nhận không cần test macOS (15/10). |
 
-### Req 6 — Reformulation bài toán 2 agent (1.0đ) — 🟡 A, **đang làm tiếp theo**
+### Req 6 — Reformulation bài toán 2 agent (1.0đ) — ✅ A đã xong (15/10)
 
 | ID | Người | Việc | File | Lưu ý |
 |---|---|---|---|---|
-| T11 | A | Hoàn thiện formulation 2 agent: state thêm gì, điều kiện thắng sau n bước, luật đẩy box của đối phương | `docs/formulation.md` (mục Requirement 6) | Đã có bản nháp, câu "để lại target ban đầu" từng bị flag là chưa rõ — đọc lại kỹ trước khi chốt, vì B sẽ dựa vào đây viết T10. |
+| T11 | A | Hoàn thiện formulation 2 agent: state thêm gì, điều kiện thắng sau n bước, luật đẩy box của đối phương, luật xử lý khi 2 agent cùng tranh 1 ô/1 box (xác suất p) | `docs/formulation.md` (mục Requirement 6) | ✅ Xong. B đọc kỹ mục này trước khi viết T10 — luật thắng/thua và luật tranh chấp đều nằm ở đây. |
 
 ### Req 7 — Thuật toán điều khiển 2 agent (1.0đ) — 🔲 B làm, sau khi xong Req 2/4
 
@@ -98,7 +98,7 @@ Ký hiệu: **A** = trưởng nhóm (GUI, formulation, state), **B** = thuật t
 | T0 | Cả 3 | Tạo repo Private, mời thành viên, thống nhất hợp đồng | `docs/team-workflow.md`, `README.md` | ✅ Xong. |
 | T16 | Cả 3 | Freeze, tạo zip, mỗi người kiểm tra và tự nộp | — | 🔲 Cuối cùng, D12 (17/10). |
 
-**Lưu ý tải việc:** A đang gánh nặng nhất (T4 ✅, T9, T11 đang làm, T12, T15). Nếu sát deadline mà A chưa xong T15 (test Mac), ưu tiên nhờ C hỗ trợ tìm máy Mac thay vì bỏ qua — đây là yêu cầu bắt buộc của Req 5. B cũng nặng (T5, T6, T8, T10) — nếu B chậm, C có thể nhận T8 (chứng minh, không cần giỏi thuật toán, chỉ cần đọc hiểu và viết test) để B tập trung T5/T6/T10.
+**Lưu ý tải việc:** A đang gánh nặng nhất (T4 ✅, T9, T11 ✅, T12). B cũng nặng (T5, T6, T8, T10) — nếu B chậm, C có thể nhận T8 (chứng minh, không cần giỏi thuật toán, chỉ cần đọc hiểu và viết test) để B tập trung T5/T6/T10.
 
 ---
 
@@ -331,7 +331,7 @@ Trước khi dùng lệnh hủy, hỏi nhóm. Thay đổi đã hủy không lấ
 | D7 · 12/10 | T9 nối `solve` thật. T6 xong. **Review chéo PR lần đầu** |
 | D8 · 13/10 | T7 có bảng số liệu. T8 chứng minh và test |
 | D9–D10 · 14–15/10 | T10 thuật toán 2 agent. T12 GUI competitive. T11 formulation 2 agent |
-| D11 · 16/10 | **Freeze code.** T15 chạy thử trên Mac. T13 slide và T14 demo xong |
+| D11 · 16/10 | **Freeze code.** T13 slide và T14 demo xong |
 | D12 · 17/10 | Tạo zip. Mỗi người kiểm tra và nộp. Sửa lỗi trước 12:00 |
 
 **Cập nhật thực tế (13/10):** T4 (GUI) hoàn thành hôm nay, trễ so với kế hoạch gốc (dự kiến D2-3, 07-08/10) — do thời gian học pygame từ đầu. A chuyển sang T11 (formulation 2 agent) ngay. Chỉ còn **4 ngày** tới freeze (16/10). Nếu B/C chưa báo tiến độ T5/T6/T2/T7, hỏi ngay hôm nay — không chờ tới D7 như lịch gốc nữa, vì đã là D8.
@@ -353,7 +353,7 @@ Nếu một người trễ hơn 1 ngày, báo nhóm ngay để cân lại kế h
 - **T10:** mỗi bước ≤1000 ms. agent_a và agent_b nằm ở hai file riêng.
 - **T12:** GUI competitive hiển thị được cả hai agent. Logic agent tách khỏi GUI.
 - **T13:** đủ nội dung rubric Presentation (phương pháp, kết quả, demo, hỏi đáp). Không có code, nền sáng.
-- **T15:** ghi lại lệnh đã chạy và kết quả trên Mac (phiên bản Python và pygame). Nếu lỗi, ghi rõ lỗi.
+- **T15:** đã bỏ, không cần test macOS.
 
 ---
 

@@ -1,6 +1,7 @@
 import pygame
 from pathlib import Path
 from state import load_map, get_valid_actions, step, walls, target
+from search import solve
 
 # TODO: pygame GUI (Requirement 5) - current focus.
 # Design spec: see docs/gui-design.md
@@ -31,18 +32,12 @@ class SokobanGame:
         self.box_on_target_img = load_and_scale(self.ASSET_DIR / "box_on_target.png", self.block_size)
 
         self.initial_state = load_map(Path(__file__).parent.parent/"example_map.txt") # Khởi tạo trạng thái ban đầu
-        self.states_sequence = [self.initial_state] # Danh sách trạng thái
-        current = self.initial_state # Trạng thái hiện tại
-
+        self.algorithm = "UCS"
         """
         Đường đi chưa có thuật toán
         """
-        self.path = ['E', 'W'] 
-        
-        self.current_step = 0 # Biến lưu trữ bước số mấy
-        for action in self.path:
-            current = step(current, action) # Cập nhật trạng thái hiện tại theo action
-            self.states_sequence.append(current) # Bỏ vào chuỗi trạng thái
+        self.path = solve(self.initial_state, self.algorithm)
+        self.build_sequence()
 
         self.is_playing = False # Biến kiểm tra xem game, trạng thái đang chạy hay dừng
         self.last_step_time = 0 # Biến đo mốc thời gian lần cuối play-back hoặc play-next
@@ -51,6 +46,17 @@ class SokobanGame:
         self.right_flash_time = -9999   # mốc thời gian lần cuối bấm →, để âm lớn cho chắc chắn ban đầu không hiện icon
         self.left_flash_time = -9999
         self.flash_duration = 200
+
+    def build_sequence(self):
+        self.states_sequence = [self.initial_state]
+        current = self.initial_state
+
+        # Lặp qua các action hợp lệ đã từ thuật toán
+        for action in self.path:
+            current = step(current, action) # Cập nhật trạng thái hiện tại lên trạng thái của bước kế tiếp
+            self.states_sequence.append(current) # Bỏ trạng thái đó vào danh sách
+
+        self.current_step = 0
 
     def draw_walls(self, walls_set : set):
         # Lặp qua tập walls để lấy các tọa độ
@@ -104,6 +110,12 @@ class SokobanGame:
                             self.current_step = max(self.current_step - 1, 0) # Lấy giá trị lớn nhất giữa current_step và 0 để không vượt xuống âm, tức là qua trạng thái khởi tạo khi chọn play-back         
                             self.left_flash_time = self.now
 
+                    if event.type == pygame.MOUSEBUTTONDOWN:
+                        if self.algo_rect.collidepoint(event.pos) and self.current_step == 0 and not self.is_playing:
+                            self.algorithm = "A*" if self.algorithm == "UCS" else "UCS"
+                            self.path = solve(self.initial_state, self.algorithm)
+                            self.build_sequence()
+
     def run(self):
         # Vòng lặp liên tục để mở của số pygame
         while(self.isRunning):
@@ -125,6 +137,8 @@ class SokobanGame:
 
             counter_text = self.font.render(f"Step: {self.current_step}/{len(self.path)}", True, (0, 0, 0))
             self.screen.blit(counter_text, (10, 460))
+            algo_text = self.font.render(f"Algo: {self.algorithm}", True, (0, 0, 0))
+            self.algo_rect = self.screen.blit(algo_text, (250, 460))
             icon_x = 150
             icon_y = 460
 
