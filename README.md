@@ -9,7 +9,8 @@
 ## Hướng Dẫn
 
  `Solve` tính lời giải; dùng `Space`, `Left`, `Right` để phát/tạm dừng và chuyển bước. 
-
+### Run app
+Mở terminal trong thư mục dự án và chạy: `python main.py`
 
 ## Cấu trúc dự án
 - `main.py` — CLI và điểm vào ứng dụng.
