@@ -26,13 +26,27 @@ class SokobanGame:
             img = pygame.image.load(file_path).convert_alpha()
             return pygame.transform.scale(img, (pixel_size, pixel_size))
 
+        def load_character(file_path, max_size):
+            img = pygame.image.load(file_path)
+            img.set_colorkey((255, 255, 255))
+            img = img.convert()
+            w, h = img.get_size()
+            scale = max_size / max(w, h)
+            new_size = (int(w * scale), int(h * scale))
+            return pygame.transform.scale(img, new_size)
+
         self.wall_img = load_and_scale(self.ASSET_DIR / "wall.png", self.block_size)
         self.box_img = load_and_scale(self.ASSET_DIR / "box.png", self.block_size)
-        self.agent_img = load_and_scale(self.ASSET_DIR / "player.png", self.block_size)
+        self.agent_img = load_character(self.ASSET_DIR / "roblox_character.jpg", self.block_size)
         self.box_on_target_img = load_and_scale(self.ASSET_DIR / "box_on_target.png", self.block_size)
 
         self.initial_state = load_map(Path(__file__).parent.parent/"example_map.txt") # Khởi tạo trạng thái ban đầu
         self.algorithm = "UCS"
+        self.screen_mode = "menu" # Menu giao diện
+        self.algo_options = ["UCS", "A*"]
+        self.algo_index = 0
+        self.title_font = pygame.font.SysFont(None, 60)
+
         """
         Đường đi chưa có thuật toán
         """
@@ -57,6 +71,41 @@ class SokobanGame:
             self.states_sequence.append(current) # Bỏ trạng thái đó vào danh sách
 
         self.current_step = 0
+
+    # Giao diện menu game
+    def draw_menu(self):
+        title_text = self.title_font.render("Sokoban", True, (0, 0, 0))
+        self.screen.blit(title_text, title_text.get_rect(center=(200, 100)))
+
+        algo_text = self.font.render(self.algorithm, True, (0, 0, 0))
+        algo_rect = algo_text.get_rect(center=(200, 220))
+        self.screen.blit(algo_text, algo_rect)
+
+        self.left_arrow_rect = pygame.Rect(130, 205, 30, 30)
+        self.right_arrow_rect = pygame.Rect(240, 205, 30, 30)
+        pygame.draw.polygon(self.screen, (0, 0, 0), [(160, 205), (160, 235), (130, 220)])
+        pygame.draw.polygon(self.screen, (0, 0, 0), [(240, 205), (240, 235), (270, 220)])
+
+        self.start_button_rect = pygame.Rect(150, 300, 100, 50)
+        pygame.draw.rect(self.screen, (0, 0, 0), self.start_button_rect, 2)
+        start_text = self.font.render("START", True, (0, 0, 0))
+        self.screen.blit(start_text, start_text.get_rect(center=self.start_button_rect.center))
+
+    def handle_menu_events(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.isRunning = False
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if self.left_arrow_rect.collidepoint(event.pos):
+                    self.algo_index = (self.algo_index - 1) % len(self.algo_options)
+                    self.algorithm = self.algo_options[self.algo_index]
+                elif self.right_arrow_rect.collidepoint(event.pos):
+                    self.algo_index = (self.algo_index + 1) % len(self.algo_options)
+                    self.algorithm = self.algo_options[self.algo_index]
+                elif self.start_button_rect.collidepoint(event.pos):
+                    self.path = solve(self.initial_state, self.algorithm)
+                    self.build_sequence()
+                    self.screen_mode = "playing"
 
     def draw_walls(self, walls_set : set):
         # Lặp qua tập walls để lấy các tọa độ
@@ -89,38 +138,40 @@ class SokobanGame:
         # Chuyển sang tọa độ pixel x, y
         x = column * self.block_size
         y = row * self.block_size
-        self.screen.blit(self.agent_img, (x, y))
+        img_rect = self.agent_img.get_rect(center=(x + self.block_size // 2, y + self.block_size // 2))
+        self.screen.blit(self.agent_img, img_rect)
 
     def handle_events(self):
-            for event in pygame.event.get():
-                    # Vòng lặp duyệt qua các sự kiện để kiểm tra có tắt cửa sổ không
-                    if event.type == pygame.QUIT:
-                        self.isRunning = False # Gán false khi tắt cửa sổ để kết thúc vòng lặp
-                    
-                    # Vòng lặp duyệt qua các sự kiện xem có sự kiện bấm phím không
-                    if event.type == pygame.KEYDOWN:
-                        if event.key == pygame.K_SPACE: # Nếu bấm space thì dừng hoặc play
-                            self.is_playing = not self.is_playing
-                        
-                        elif event.key == pygame.K_RIGHT: # Nếu bấm muỗi tên phải thì xem trạng thái kế tiếp từ trạng thái hiện tại
-                            self.current_step = min(self.current_step + 1, len(self.path)) # Lấy giá trị nhỏ nhất giữa current_step và len(path) để không vượt quá path, tức là qua trạng thái tiếp theo khi bấm play-next
-                            self.right_flash_time = self.now
+        for event in pygame.event.get():
+            # Vòng lặp duyệt qua các sự kiện để kiểm tra có tắt cửa sổ không
+            if event.type == pygame.QUIT:
+                self.isRunning = False # Gán false khi tắt cửa sổ để kết thúc vòng lặp
             
-                        elif event.key == pygame.K_LEFT: # Nếu bấm muỗi tên trái thì lùi lại trạng thái trước đó từ trạng thái hiện tại
-                            self.current_step = max(self.current_step - 1, 0) # Lấy giá trị lớn nhất giữa current_step và 0 để không vượt xuống âm, tức là qua trạng thái khởi tạo khi chọn play-back         
-                            self.left_flash_time = self.now
-
-                    if event.type == pygame.MOUSEBUTTONDOWN:
-                        if self.algo_rect.collidepoint(event.pos) and self.current_step == 0 and not self.is_playing:
-                            self.algorithm = "A*" if self.algorithm == "UCS" else "UCS"
-                            self.path = solve(self.initial_state, self.algorithm)
-                            self.build_sequence()
+            # Vòng lặp duyệt qua các sự kiện xem có sự kiện bấm phím không
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE: # Nếu bấm space thì dừng hoặc play
+                    self.is_playing = not self.is_playing
+                
+                elif event.key == pygame.K_RIGHT: # Nếu bấm muỗi tên phải thì xem trạng thái kế tiếp từ trạng thái hiện tại
+                    self.current_step = min(self.current_step + 1, len(self.path)) # Lấy giá trị nhỏ nhất giữa current_step và len(path) để không vượt quá path, tức là qua trạng thái tiếp theo khi bấm play-next
+                    self.right_flash_time = self.now
+    
+                elif event.key == pygame.K_LEFT: # Nếu bấm muỗi tên trái thì lùi lại trạng thái trước đó từ trạng thái hiện tại
+                    self.current_step = max(self.current_step - 1, 0) # Lấy giá trị lớn nhất giữa current_step và 0 để không vượt xuống âm, tức là qua trạng thái khởi tạo khi chọn play-back         
+                    self.left_flash_time = self.now
 
     def run(self):
         # Vòng lặp liên tục để mở của số pygame
         while(self.isRunning):
             self.screen.fill(self.color) # Tô màu nền cho game
             self.now = pygame.time.get_ticks() # Biến thời gian chạy để biết ms đã trôi qua
+
+            if self.screen_mode == "menu":
+                self.draw_menu()
+                self.handle_menu_events()
+                pygame.display.update()
+                self.clock.tick(60)
+                continue
             
             # Kiểm tra xem game có đang chạy không, và xem bước tiếp theo agent đi có tối thiểu 500ms không thì mới cập nhật
             if self.is_playing and self.now - self.last_step_time >= self.step_interval:
@@ -138,7 +189,7 @@ class SokobanGame:
             counter_text = self.font.render(f"Step: {self.current_step}/{len(self.path)}", True, (0, 0, 0))
             self.screen.blit(counter_text, (10, 460))
             algo_text = self.font.render(f"Algo: {self.algorithm}", True, (0, 0, 0))
-            self.algo_rect = self.screen.blit(algo_text, (250, 460))
+            self.screen.blit(algo_text, (250, 460))
             icon_x = 150
             icon_y = 460
 
