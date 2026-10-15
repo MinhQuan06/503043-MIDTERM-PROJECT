@@ -120,7 +120,7 @@ class SokobanRenderer:
             )
 
         surface.blit(image, rect)
-
+    
     def render_state(self, surface, problem, state, area=None):
         agent, boxes = state
 

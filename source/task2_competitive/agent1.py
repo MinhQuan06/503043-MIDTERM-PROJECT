@@ -17,67 +17,9 @@ class Agent1:
     def __init__(self):
         self.agent_id = 1
 
-    def heuristic(self, boxes, goals):
-        """
-        Estimate the distance from boxes to goals.
-        """
-        total = 0
-
-        for bx, by in boxes:
-            if (bx, by) in goals:
-                continue
-
-            distance = min(
-                abs(bx - gx) + abs(by - gy)
-                for gx, gy in goals
-            )
-
-            total += distance
-
-        return total
-
-    def get_successors(self, state, player, boxes):
-        """
-        Generate valid successor states.
-        Agent 2 is treated as a static obstacle.
-        """
-        successors = []
-
-        opponent = state.agents[2]
-
-        for action, (dx, dy) in MOVES.items():
-            target = (player[0] + dx, player[1] + dy)
-
-            if not self.is_free(state, target):
-                continue
-
-            if target == opponent:
-                continue
-
-            new_boxes = set(boxes)
-
-            if target in boxes:
-                box_target = (
-                    target[0] + dx,
-                    target[1] + dy
-                )
-
-                if not self.is_free(state, box_target):
-                    continue
-
-                if box_target in boxes or box_target == opponent:
-                    continue
-
-                new_boxes.remove(target)
-                new_boxes.add(box_target)
-
-            successors.append((
-                action,
-                target,
-                frozenset(new_boxes)
-            ))
-
-        return successors
+    @staticmethod
+    def distance(a, b):
+        return abs(a[0] - b[0]) + abs(a[1] - b[1])
 
     def is_free(self, state, position):
         x, y = position
@@ -88,65 +30,187 @@ class Agent1:
             and position not in state.walls
         )
 
-    def choose_action(self, state: CompetitiveState, time_limit=0.9):
+    def get_successors(self, state, player, boxes):
         """
-        Use A* to select the first action of a plan.
-        Return WAIT if no suitable action is found.
+        boxes is a tuple of (position, owner) pairs.
+        Agent 2 is treated as a static obstacle.
         """
+        successors = []
+        opponent = state.agents[2]
+
+        current_boxes = dict(boxes)
+
+        for action, (dx, dy) in MOVES.items():
+            target = (
+                player[0] + dx,
+                player[1] + dy
+            )
+
+            if not self.is_free(state, target):
+                continue
+
+            if target == opponent:
+                continue
+
+            new_boxes = current_boxes.copy()
+
+            if target in current_boxes:
+                box_target = (
+                    target[0] + dx,
+                    target[1] + dy
+                )
+
+                if not self.is_free(state, box_target):
+                    continue
+
+                if box_target in current_boxes:
+                    continue
+
+                if box_target == opponent:
+                    continue
+
+                # The pushing agent becomes the owner.
+                del new_boxes[target]
+                new_boxes[box_target] = self.agent_id
+
+            successors.append((
+                action,
+                target,
+                tuple(sorted(new_boxes.items()))
+            ))
+
+        return successors
+
+    def score(self, boxes, goals):
+        return sum(
+            1
+            for position, owner in boxes
+            if position in goals and owner == self.agent_id
+        )
+
+    def heuristic(self, player, boxes, goals):
+        """
+        Estimate the effort needed to score the next point.
+
+        This is a competitive search estimate, not a
+        guaranteed admissible Sokoban heuristic.
+        """
+        box_dict = dict(boxes)
+        candidates = []
+
+        for position, owner in boxes:
+            # Already scored by this agent.
+            if position in goals and owner == self.agent_id:
+                continue
+
+            bx, by = position
+
+            for dx, dy in MOVES.values():
+                behind = (bx - dx, by - dy)
+                destination = (bx + dx, by + dy)
+
+                # Prefer boxes that can be approached.
+                # Actual legality is checked in successors.
+                if destination in box_dict:
+                    continue
+
+                if behind == player:
+                    approach = 0
+                else:
+                    approach = self.distance(player, behind)
+
+                goal_distance = min(
+                    (
+                        self.distance(position, goal)
+                        for goal in goals
+                    ),
+                    default=0
+                )
+
+                candidates.append(
+                    approach + goal_distance + 1
+                )
+
+        return min(candidates, default=0)
+
+    def choose_action(
+        self,
+        state: CompetitiveState,
+        time_limit=0.9
+    ):
         start_time = time.perf_counter()
 
-        start_player = state.agents[1]
-        start_boxes = frozenset(state.boxes.keys())
+        player = state.agents[self.agent_id]
 
-        start = (start_player, start_boxes)
+        boxes = tuple(sorted(state.boxes.items()))
+
+        start = (player, boxes)
+
+        initial_score = self.score(boxes, state.goals)
 
         counter = itertools.count()
-
         frontier = []
+
+        initial_h = self.heuristic(
+            player, boxes, state.goals
+        )
 
         heapq.heappush(
             frontier,
-            (
-                self.heuristic(start_boxes, state.goals),
-                0,
-                next(counter),
-                start,
-                None
-            )
+            (initial_h, 0, next(counter), start, None)
         )
 
         best_cost = {start: 0}
 
-        best_action = "WAIT"
-        best_heuristic = self.heuristic(
-            start_boxes,
-            state.goals
-        )
+        # A fallback action is selected from explored states.
+        fallback_action = "WAIT"
+        fallback_rank = None
 
         while frontier:
             if time.perf_counter() - start_time >= time_limit:
                 break
 
-            priority, cost, _, current, first_action = (
+            _, cost, _, current, first_action = (
                 heapq.heappop(frontier)
             )
 
             if cost != best_cost.get(current):
                 continue
 
-            player, boxes = current
+            current_player, current_boxes = current
 
-            h = self.heuristic(boxes, state.goals)
+            current_score = self.score(
+                current_boxes, state.goals
+            )
 
-            if h < best_heuristic:
-                best_heuristic = h
-                best_action = first_action or "WAIT"
-
-            if all(box in state.goals for box in boxes):
+            if current_score > initial_score:
                 return first_action or "WAIT"
 
+            h = self.heuristic(
+                current_player,
+                current_boxes,
+                state.goals
+            )
+
+            # Prefer progress toward scoring.
+            if first_action is not None:
+                rank = (
+                    -current_score,
+                    h,
+                    cost
+                )
+
+                if (
+                    fallback_rank is None
+                    or rank < fallback_rank
+                ):
+                    fallback_rank = rank
+                    fallback_action = first_action
+
             for action, new_player, new_boxes in (
-                self.get_successors(state, player, boxes)
+                self.get_successors(
+                    state, current_player, current_boxes
+                )
             ):
                 new_state = (new_player, new_boxes)
                 new_cost = cost + 1
@@ -160,15 +224,14 @@ class Agent1:
 
                 first = first_action or action
 
-                new_priority = (
-                    new_cost
-                    + self.heuristic(new_boxes, state.goals)
+                new_h = self.heuristic(
+                    new_player, new_boxes, state.goals
                 )
 
                 heapq.heappush(
                     frontier,
                     (
-                        new_priority,
+                        new_cost + new_h,
                         new_cost,
                         next(counter),
                         new_state,
@@ -176,4 +239,4 @@ class Agent1:
                     )
                 )
 
-        return best_action
+        return fallback_action

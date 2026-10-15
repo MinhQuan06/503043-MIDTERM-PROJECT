@@ -211,7 +211,7 @@ class CompetitiveEngine:
             "winner": winner,
             "finished": self.finished,
         }
-
+        
     def _is_inside(self, position: Position) -> bool:
         x, y = position
         return (

@@ -46,12 +46,14 @@ class App:
 
             if self.current_screen is not None:
                 self.current_screen.draw(self.screen)
+            else:
+                self.draw_welcome()
 
             pygame.display.flip()
 
         pygame.quit()
 
 
-
+        
     def quit(self):
         self.running = False

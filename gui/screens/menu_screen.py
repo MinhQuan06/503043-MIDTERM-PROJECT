@@ -18,7 +18,7 @@ class MenuScreen(BaseScreen):
 
         def select_agent(agent_id):
             self.app.selected_agent = agent_id
-
+            
             if agent_id == 1:
                 self.open_single_agent()
             elif agent_id == 2:
@@ -58,7 +58,7 @@ class MenuScreen(BaseScreen):
         title = title_font.render(
             "SOKOBAN", True, self.ACCENT
         )
-
+   
 
         surface.blit(
             title,
@@ -66,11 +66,11 @@ class MenuScreen(BaseScreen):
                 center=(self.app.WIDTH // 2, 155)
             ),
         )
-
+      
 
         for button in self.buttons:
             button.draw(surface)
-
+            
     def open_single_agent(self):
         from gui.screens.setup_screen import SetupScreen
         self.app.change_screen(SetupScreen(self.app))

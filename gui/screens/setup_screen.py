@@ -22,14 +22,14 @@ class SetupScreen(BaseScreen):
     ACCENT = (238, 164, 55)
 
     MAPS = [
-        ("Map 1", "example_map.txt"),
-        ("Map 2", "versus_map.txt"),
+        ("Map 1", "map1.txt"),
+        ("Map 2", "map2.txt"),
     ]
 
     # Keep only algorithms implemented in core/search.py.
     ALGORITHMS = ["UCS", "A*"]
 
-
+    
     def __init__(self, app):
         super().__init__(app)
 
@@ -105,13 +105,13 @@ class SetupScreen(BaseScreen):
         self.selected_algorithm_index = index
         self.message = ""
 
-
+ 
 
     def _go_back(self):
         from gui.screens.menu_screen import MenuScreen
         self.app.change_screen(MenuScreen(self.app))
 
-
+    
     def _start(self):
         from gui.screens.game_screen import GameScreen
 
@@ -121,7 +121,7 @@ class SetupScreen(BaseScreen):
         map_path = MAP_DIR / filename
 
         if not map_path.is_file():
-            self.message = f"Map not found: {filename}"
+            self.message = f"Map not found: {filename}" 
             return
 
         self.app.selected_map = str(map_path)
@@ -159,7 +159,7 @@ class SetupScreen(BaseScreen):
         )
         surface.blit(title_image, title_rect)
 
-
+    
 
     def draw(self, surface):
         surface.fill(self.BACKGROUND)
@@ -211,7 +211,7 @@ class SetupScreen(BaseScreen):
                     border_radius=10,
                 )
 
-
+        
         preview_area = pygame.Rect(
             center_rect.x + 12,
             center_rect.y + 65,

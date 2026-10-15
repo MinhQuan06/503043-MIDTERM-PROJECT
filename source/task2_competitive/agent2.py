@@ -1,3 +1,4 @@
+
 import heapq
 import itertools
 import time
@@ -17,29 +18,12 @@ class Agent2:
     def __init__(self):
         self.agent_id = 2
 
-    def heuristic(self, boxes, goals):
-        """
-        Estimate the total Manhattan distance
-        from boxes to their nearest goals.
-        """
-        total = 0
-
-        for bx, by in boxes:
-            if (bx, by) in goals:
-                continue
-
-            distance = min(
-                abs(bx - gx) + abs(by - gy)
-                for gx, gy in goals
-            )
-
-            total += distance
-
-        return total
+    @staticmethod
+    def distance(a, b):
+        return abs(a[0] - b[0]) + abs(a[1] - b[1])
 
     def is_free(self, state, position):
         x, y = position
-
         return (
             0 <= x < state.width
             and 0 <= y < state.height
@@ -47,18 +31,12 @@ class Agent2:
         )
 
     def get_successors(self, state, player, boxes):
-        """
-        Generate valid successor states.
-        Agent 1 is treated as a static obstacle.
-        """
         successors = []
         opponent = state.agents[1]
+        current_boxes = dict(boxes)
 
         for action, (dx, dy) in MOVES.items():
-            target = (
-                player[0] + dx,
-                player[1] + dy
-            )
+            target = (player[0] + dx, player[1] + dy)
 
             if not self.is_free(state, target):
                 continue
@@ -66,9 +44,9 @@ class Agent2:
             if target == opponent:
                 continue
 
-            new_boxes = set(boxes)
+            new_boxes = current_boxes.copy()
 
-            if target in boxes:
+            if target in current_boxes:
                 box_target = (
                     target[0] + dx,
                     target[1] + dy
@@ -77,71 +55,125 @@ class Agent2:
                 if not self.is_free(state, box_target):
                     continue
 
-                if box_target in boxes:
+                if box_target in current_boxes:
                     continue
 
                 if box_target == opponent:
                     continue
 
-                new_boxes.remove(target)
-                new_boxes.add(box_target)
+                # Agent 2 gains ownership when pushing.
+                del new_boxes[target]
+                new_boxes[box_target] = self.agent_id
 
             successors.append((
                 action,
                 target,
-                frozenset(new_boxes)
+                tuple(sorted(new_boxes.items()))
             ))
 
         return successors
+
+    def score(self, boxes, goals):
+        return sum(
+            1
+            for position, owner in boxes
+            if position in goals and owner == self.agent_id
+        )
+
+    def heuristic(self, player, boxes, goals, state):
+        """
+        Greedy estimate of effort to gain another point.
+        Lower values are preferred.
+        """
+        box_dict = dict(boxes)
+        opponent = state.agents[1]
+        candidates = []
+
+        for position, owner in boxes:
+            if position in goals and owner == self.agent_id:
+                continue
+
+            bx, by = position
+
+            for dx, dy in MOVES.values():
+                behind = (bx - dx, by - dy)
+                destination = (bx + dx, by + dy)
+
+                if not self.is_free(state, behind):
+                    continue
+
+                if not self.is_free(state, destination):
+                    continue
+
+                if behind in box_dict:
+                    continue
+
+                if destination in box_dict:
+                    continue
+
+                if behind == opponent:
+                    continue
+
+                if destination == opponent:
+                    continue
+
+                approach = self.distance(player, behind)
+
+                # Approximate distance to a goal after pushing.
+                goal_distance = min(
+                    (
+                        self.distance(destination, goal)
+                        for goal in goals
+                    ),
+                    default=0
+                )
+
+                candidates.append(
+                    approach + goal_distance + 1
+                )
+
+        if not candidates:
+            return 100000
+
+        return min(candidates)
 
     def choose_action(
         self,
         state: CompetitiveState,
         time_limit=0.9
     ):
-        """
-        Greedy Best-First Search.
-
-        Returns the first action of the selected plan.
-        """
         start_time = time.perf_counter()
 
-        start_player = state.agents[2]
-        start_boxes = frozenset(state.boxes.keys())
+        player = state.agents[self.agent_id]
+        boxes = tuple(sorted(state.boxes.items()))
+        start = (player, boxes)
 
-        start = (start_player, start_boxes)
+        initial_score = self.score(boxes, state.goals)
 
         counter = itertools.count()
-
         frontier = []
 
         initial_h = self.heuristic(
-            start_boxes,
-            state.goals
+            player, boxes, state.goals, state
         )
 
         heapq.heappush(
             frontier,
-            (
-                initial_h,
-                next(counter),
-                start,
-                None
-            )
+            (initial_h, next(counter), start, None)
         )
 
         visited = set()
         discovered = {start}
 
-        best_action = "WAIT"
-        best_heuristic = initial_h
+        fallback_action = "WAIT"
+        fallback_rank = None
 
         while frontier:
             if time.perf_counter() - start_time >= time_limit:
                 break
 
-            h, _, current, first_action = (
-                heapq.heappop(frontier)
+            h, _, current, first_action = heapq.heappop(
+                frontier
             )
 
             if current in visited:
@@ -149,26 +181,37 @@ class Agent2:
 
             visited.add(current)
 
-            player, boxes = current
+            current_player, current_boxes = current
 
-            if h < best_heuristic:
-                best_heuristic = h
-                best_action = first_action or "WAIT"
-
-            if all(box in state.goals for box in boxes):
-                return first_action or "WAIT"
-
-            successors = self.get_successors(
-                state,
-                player,
-                boxes
+            current_score = self.score(
+                current_boxes, state.goals
             )
 
-            for action, new_player, new_boxes in successors:
-                new_state = (
-                    new_player,
-                    new_boxes
+            # A scoring plan has been found.
+            if current_score > initial_score:
+                return first_action or "WAIT"
+
+            if first_action is not None:
+                rank = (
+                    -current_score,
+                    h
                 )
+
+                if (
+                    fallback_rank is None
+                    or rank < fallback_rank
+                ):
+                    fallback_rank = rank
+                    fallback_action = first_action
+
+            for action, new_player, new_boxes in (
+                self.get_successors(
+                    state,
+                    current_player,
+                    current_boxes
+                )
+            ):
+                new_state = (new_player, new_boxes)
 
                 if new_state in discovered:
                     continue
@@ -176,8 +219,10 @@ class Agent2:
                 discovered.add(new_state)
 
                 new_h = self.heuristic(
+                    new_player,
                     new_boxes,
-                    state.goals
+                    state.goals,
+                    state
                 )
 
                 first = first_action or action
@@ -192,4 +237,4 @@ class Agent2:
                     )
                 )
 
-        return best_action
+        return fallback_action
