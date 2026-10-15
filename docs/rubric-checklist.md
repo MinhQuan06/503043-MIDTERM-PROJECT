@@ -4,8 +4,8 @@ Track progress against `RUBRIC_GK.docx` here. Update as requirements are finishe
 
 ## Formulation (2.0)
 
-- [ ] Req 1 — State-space formulation (states, actions, start, goal, transition/cost model)
-- [ ] Req 6 — Reformulated as competitive 2-agent problem
+- [x] Req 1 — State-space formulation (states, actions, start, goal, transition/cost model)
+- [x] Req 6 — Reformulated as competitive 2-agent problem
 
 ## Uninformed Search (3.0)
 
@@ -33,7 +33,3 @@ Track progress against `RUBRIC_GK.docx` here. Update as requirements are finishe
 ## Presentation - Q&A (1.0)
 
 - [ ] (assessed live - no prep checklist item, just know the material)
-
-## Platform requirement (not separately scored, but a submission blocker)
-
-- [ ] Verified running on macOS 13.7.8 (Ventura), Intel Core i5 - do this well before the deadline, not the night of
