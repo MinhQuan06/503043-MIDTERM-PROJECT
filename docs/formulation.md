@@ -5,7 +5,7 @@ Tài liệu này là **phần thiết kế lý thuyết** của nhóm. Không ph
 **Vai trò trong bài:**
 - Đề yêu cầu (Requirement 1, 1.0 điểm): mô hình hóa Sokoban thành bài toán tìm kiếm trong không gian trạng thái và xác định chi tiết các thành phần liên quan. Đây là nội dung chấm ở rubric mục "Formulation" (2.0 điểm).
 - Nội dung này đưa thẳng vào **slide thuyết trình** và phần **trả lời hỏi đáp**.
-- Sau này, `state.py` phải cài đặt đúng mô hình viết ở đây. Nếu code và tài liệu lệch nhau, sẽ bị trừ điểm khi hỏi đáp.
+- `core/problem.py` cài đặt mô hình viết ở đây. Nếu code và tài liệu lệch nhau, sẽ bị trừ điểm khi hỏi đáp.
 - Requirement 6 (bài 2 agent) cũng dựa trên mô hình này. Phần cuối tài liệu có chỗ để ghi thay đổi khi chuyển sang 2 agent.
 
 **Ai viết:** C viết bản nháp, cả nhóm cùng đọc và thống nhất. Câu trả lời phải do nhóm tự suy nghĩ và viết, không nhờ AI viết hộ, vì nội dung này sẽ nằm trong bài nộp và slide.

@@ -40,15 +40,15 @@ Ký hiệu: **A** = trưởng nhóm (GUI, formulation, state), **B** = thuật t
 
 | ID | Người | Việc | File | Lưu ý |
 |---|---|---|---|---|
-| T5 | B | Uniform Cost Search | `sokoban/search.py` (đã có stub) | Dùng `get_valid_actions(state)`, `step(state, action)`, `goal_check(state)` từ `state.py` — chỉ đọc, không sửa `state.py`. Không có lời giải thì trả `[]`, không trả `None`, không để crash. |
-| T6 | B | A* + heuristic tự đề xuất | `sokoban/search.py`, `sokoban/heuristic.py` (đã có stub) | **Cấm** dùng Euclidean/Manhattan distance thuần (đề nói rõ). Nghĩ heuristic khác, ví dụ: số box chưa đúng target, hoặc khoảng cách đi thực tế có né tường (không phải đường chim bay). |
+| T5 | B | Uniform Cost Search | `core/search.py` | Dùng mô hình trong `core/problem.py`. Không có lời giải thì báo rõ và không làm crash GUI. |
+| T6 | B | A* + heuristic tự đề xuất | `core/search.py`, `core/heuristic.py` | **Cấm** dùng Euclidean/Manhattan distance thuần (đề nói rõ). |
 
 ### Req 3 — Thực nghiệm so sánh (1.0đ) — 🔲 C làm, cần T5/T6 xong trước mới đo được
 
 | ID | Người | Việc | File | Lưu ý |
 |---|---|---|---|---|
-| T2 | C | Bộ map test: nhỏ, vừa, khó (map khó hơn map mẫu để thấy rõ khác biệt UCS/A*) | `source/task1_sokoban/maps/` | Làm trước, không cần chờ T5/T6, chỉ cần `state.py` đọc được map là test thử. |
-| T7 | C | Harness đo thời gian chạy, số node đã mở, bộ nhớ dùng — so UCS với A* trên từng map T2 | `source/task1_sokoban/experiments/` | Phải chạy được nhiều map liên tiếp, xuất ra bảng số liệu (CSV hoặc in ra console đều được), không cần làm UI đẹp cho phần này. |
+| T2 | C | Bộ map test: nhỏ, vừa, khó (map khó hơn map mẫu để thấy rõ khác biệt UCS/A*) | `maps/` | Làm trước, không cần chờ T5/T6. |
+| T7 | C | Harness đo thời gian chạy, số node đã mở, bộ nhớ dùng — so UCS với A* trên từng map T2 | `experiments/` | Phải chạy được nhiều map liên tiếp, xuất ra bảng số liệu (CSV hoặc in ra console đều được). |
 
 ### Req 4 — Chứng minh heuristic (1.0đ) — 🔲 B làm, sau khi xong T6
 
@@ -60,10 +60,10 @@ Ký hiệu: **A** = trưởng nhóm (GUI, formulation, state), **B** = thuật t
 
 | ID | Người | Việc | File | Trạng thái |
 |---|---|---|---|---|
-| T3 | A | `state.py`: biểu diễn state, đọc map, kiểm tra đích | `sokoban/state.py` | ✅ Xong, đã test kỹ bằng REPL. |
-| T4 | A | Vẽ map bằng asset thật, Space tạm dừng/chạy, → / ← bước tới/lùi, bộ đếm action, icon play/pause kiểu Youtube, tổ chức OOP (`class SokobanGame`) | `sokoban/game.py` | ✅ Xong (13/10). |
-| — | A | Thêm lựa chọn UCS hoặc A* trên UI (đề bắt buộc: "two options of algorithms") | `sokoban/game.py` | 🔲 Chưa làm — việc kế tiếp sau T11. |
-| T9 | A | Thay `self.path = ['E', 'W']` (dữ liệu test tạm) bằng gọi `solve()` thật từ `search.py` | `sokoban/game.py` | 🔲 Chờ B xong T5/T6 mới làm được. |
+| T3 | A | Mô hình state, đọc map, kiểm tra đích | `core/problem.py` | ✅ Có bản triển khai hiện tại. |
+| T4 | A | GUI OOP, render, playback, bộ đếm action | `gui/` | 🟡 Đang hoàn thiện. |
+| — | A | Cho chọn UCS hoặc A* trên menu | `gui/screens/menu.py` | ✅ Có lựa chọn trong menu. |
+| T9 | A | Nối GUI với solver | `gui/screens/single_screen.py`, `core/search.py` | ✅ Single Agent gọi solver và mở playback. |
 | T15 | A | Chạy thử toàn bộ trên macOS 13.7.8 Intel, ghi lại kết quả (bản Python, bản pygame, lỗi nếu có) | `README.md` | 🔲 Chưa làm — cần mượn máy Mac trước D11 (16/10). |
 
 ### Req 6 — Reformulation bài toán 2 agent (1.0đ) — 🟡 A, **đang làm tiếp theo**
@@ -76,13 +76,13 @@ Ký hiệu: **A** = trưởng nhóm (GUI, formulation, state), **B** = thuật t
 
 | ID | Người | Việc | File | Lưu ý |
 |---|---|---|---|---|
-| T10 | B | Thuật toán chọn action cho từng agent mỗi bước, giới hạn ≤1000ms/bước | `source/task2_competitive/agent_a/`, `source/task2_competitive/agent_b/` | Hai thư mục **không import lẫn nhau** (đề yêu cầu tách biệt để 2 nhóm có thể đấu nhau). Phải đọc xong T11 (formulation 2 agent của A) trước khi viết, vì luật thắng/thua nằm ở đó. |
+| T10 | B | Thuật toán chọn action cho từng agent mỗi bước, giới hạn ≤1000ms/bước | `source/task2_competitive/agent_a/`, `source/task2_competitive/agent_b/` | Hai agent **không import lẫn nhau**. Phải chốt formulation 2-agent trước khi viết. |
 
 ### Req 8 — GUI competitive (1.0đ) — 🔲 A làm, sau khi B xong T10
 
 | ID | Người | Việc | File | Lưu ý |
 |---|---|---|---|---|
-| T12 | A | GUI cho chế độ 2 agent, box của mỗi agent hiển thị màu khác nhau, agent tách file riêng | `source/task2_competitive/main.py` + GUI | Tái dùng cấu trúc `class SokobanGame` đã làm ở T4 nếu hợp lý, không viết lại từ đầu. |
+| T12 | A | GUI cho chế độ 2 agent, box của mỗi agent hiển thị màu khác nhau | `gui/screens/versus_screen.py`, `versus/` | Tái sử dụng renderer và cấu trúc GUI hiện có. |
 
 ### Presentation (2.0đ) — 🔲 C làm dần, dựa trên tiến độ các Req trên
 
@@ -119,17 +119,13 @@ Ký hiệu: **A** = trưởng nhóm (GUI, formulation, state), **B** = thuật t
 | `C` | box đã nằm đúng target |
 
 - Số box bằng số target. Mỗi map có đúng một `A`.
-- Ví dụ: `source/task1_sokoban/example_map.txt`.
+- Ví dụ: `maps/example_map.txt`.
 
 ### 4.2. State (owner: A, T3)
 
 State là ảnh chụp đủ để biết trò chơi đang ở đâu. **Không sửa state tại chỗ**, luôn tạo state mới. Nhờ vậy UCS và A* có thể giữ nhiều state cùng lúc.
 
-Gồm:
-- Vị trí agent (hàng, cột).
-- Tập vị trí box hiện tại.
-- Tập vị trí tường (không đổi, dùng chung).
-- Tập vị trí target (không đổi, dùng chung).
+Trong code hiện tại, state là cặp `(agent_position, box_positions)`. Tường và target thuộc cấu hình bất biến của `SokobanProblem`, không lặp lại trong mỗi state.
 
 Phải làm được:
 - Tạo state ban đầu từ file map.
@@ -149,33 +145,30 @@ Phải làm được:
 
 Đây là **điểm nối duy nhất** giữa GUI và phần tìm kiếm.
 
-- **Tên:** `solve`
-- **Đầu vào:**
-  - `initial_state`: state ban đầu (mục 4.2).
-  - `algorithm`: chuỗi, chỉ nhận `"UCS"` hoặc `"A*"`.
-- **Đầu ra:** danh sách action (mục 4.3) theo thứ tự từ đầu đến đích. Không có lời giải thì trả về danh sách rỗng và báo rõ, không được im lặng.
-- **Hiện trạng:** là **stub** (hàm giả). Trả về danh sách rỗng hoặc một đường cố định để GUI chạy thử được. Khi B xong UCS và A*, chỉ đổi thân hàm. GUI không đổi.
+- **Tên:** `solve(problem, algorithm)`
+- **Đầu vào:** `SokobanProblem` đã đọc từ map và thuật toán `"ucs"` hoặc `"astar"`.
+- **Đầu ra hiện tại:** bộ ba `(actions, cost, metrics)`. `actions` là danh sách action theo thứ tự từ đầu đến đích; khi không có lời giải, `actions` là `None`.
 
-GUI **không** gọi trực tiếp `search.py` hay `heuristic.py`. Chỉ gọi `solve`.
+GUI gọi `solve` từ `core/search.py` ở màn hình một agent; renderer và playback không phụ thuộc trực tiếp vào thuật toán.
 
-**Đã tạo sẵn stub** tại `sokoban/search.py` (hàm `solve`, `ucs`, `a_star`) và `sokoban/heuristic.py` (hàm `heuristic`), mỗi hàm có comment `TODO` + docstring ghi rõ input/output. B chỉ cần mở 2 file này và điền thân hàm — không cần đụng `game.py` hay `state.py`, nên không lo conflict với A.
+Solver hiện được tổ chức trong `core/search.py`, `core/problem.py` và `core/heuristic.py`.
 
 **Ghi chú cho B khi bắt đầu T5/T6:**
 - Branch riêng: `feat/T5-ucs` rồi `feat/T6-astar` (xem Bước 5.4).
-- Tự test bằng script nhỏ, không cần chạy `game.py`:
+- Tự test bằng script nhỏ, không cần chạy GUI:
   ```
-  from state import load_map
-  from search import solve
-  s = load_map("đường_dẫn_tới_example_map.txt")
-  print(solve(s, "UCS"))
+  from core.problem import SokobanProblem
+  from core.search import solve
+  problem = SokobanProblem.from_file("maps/example_map.txt")
+  print(solve(problem, "ucs"))
   ```
-- `ucs`/`a_star` phải trả về `list` rỗng `[]` nếu không có lời giải — không được trả `None` hay để crash, vì GUI sẽ lặp qua kết quả này.
+- `solve` trả `(actions, cost, metrics)`; kiểm tra `actions is None` trước khi mở playback.
 - Heuristic (T6) không được dùng Euclidean hay Manhattan distance thuần — đề cấm rõ. Nghĩ heuristic khác (vd: số box chưa đúng chỗ, tổng khoảng cách theo ô đi được thực tế...).
-- Xong `ucs`/`a_star`, báo A để nối `solve()` thật vào GUI (T9) — A tự đổi 1 dòng trong `game.py`, B không cần sửa gì thêm bên đó.
+- Solver đã được nối với playback trong `gui/screens/single_screen.py`.
 
 ### 4.5. GUI (owner: A)
 
-- Nhận state ban đầu từ `main.py`.
+- Nhận state ban đầu từ `core/problem.py`.
 - Gọi `solve` một lần khi người dùng chọn thuật toán. Lưu danh sách action trả về.
 - Điều khiển bằng bàn phím:
   - Space: tạm dừng / tiếp tục.
@@ -186,7 +179,7 @@ GUI **không** gọi trực tiếp `search.py` hay `heuristic.py`. Chỉ gọi `
 
 ### 4.6. Chế độ 2 agent (B cho thuật toán, A cho GUI)
 
-- Mỗi agent nằm trong thư mục riêng: `source/task2_competitive/agent_a/` và `agent_b/`. Hai thư mục không import lẫn nhau.
+- Hai agent được đặt riêng tại `source/task2_competitive/agent_a/` và `source/task2_competitive/agent_b/`; hai phần không import lẫn nhau.
 - Thuật toán điều khiển nhận state chung, trả về action cho từng agent trong ≤1000 ms.
 - GUI gọi thuật toán điều khiển, không chứa logic agent bên trong.
 
@@ -257,7 +250,7 @@ git checkout -b feat/T5-ucs
 Commit nhỏ và thường xuyên, mỗi commit là một bước có ý nghĩa. Dùng `git add <file cụ thể>`, không dùng `git add .`:
 
 ```
-git add source/task1_sokoban/sokoban/search.py
+git add core/search.py
 git commit -m "Thêm UCS dùng hàng đợi ưu tiên"
 ```
 
@@ -325,7 +318,7 @@ Trước khi dùng lệnh hủy, hỏi nhóm. Thay đổi đã hủy không lấ
 
 | Ngày | Việc cần xong |
 |---|---|
-| D1 · 06/10 | T0 (repo, hợp đồng). **T1 đã xong.** Bắt đầu T2, T3, T5. Sáng 07/10: A sửa lại `state.py` theo formulation |
+| D1 · 06/10 | T0 (repo, hợp đồng). **T1 đã xong.** Bắt đầu T2, T3, T5. Sáng 07/10: A sửa lại `core/problem.py` theo formulation |
 | D2–D3 · 07–08/10 | T3 xong. T4 bắt đầu với stub. T5 chạy được trên map nhỏ. T1, T2 xong |
 | D4–D6 · 09–11/10 | T4 hoàn thiện. T6 (A* và heuristic). T7 bắt đầu |
 | D7 · 12/10 | T9 nối `solve` thật. T6 xong. **Review chéo PR lần đầu** |
